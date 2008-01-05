@@ -1,0 +1,10 @@
+fincore
+=======
+A utility for determining whether a file is in the kernel's buffer cache.
+
+This simple program iterates over a list of files and calls mmap() and then
+mincore() for each disk block of a file.  It reports whether the blocks are in
+the kernel's page buffer cache.
+
+This is a fully C implementation of David Plonka's fincore work, available at
+http://net.doit.wisc.edu/~plonka/fincore/
