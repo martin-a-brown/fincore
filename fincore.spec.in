@@ -1,0 +1,37 @@
+Summary: Utility for examining how much of a file is in buffer cache.
+Name:    fincore
+Version: @VERSION@
+Release: 1
+License: GPL
+Group: System/Monitoring
+# URL: 
+
+Source: %{name}-%{version}.tar.gz
+BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root
+
+%description
+
+
+%prep
+%setup
+
+%build
+%configure
+%{__make} %{?_smp_mflags}
+
+%install
+%{__rm} -rf %{buildroot}
+%{__make} install DESTDIR="%{buildroot}"
+
+%clean
+%{__rm} -rf %{buildroot}
+
+%files
+%defattr(-, root, root, 0755)
+%doc README
+# %doc %{_mandir}/man1/fincore.1*
+%{_bindir}/fincore
+
+%changelog
+* Sat Jan 05 2008 Martin A. Brown <mabrown@renesys.com> - 0.10-1
+- Initial package. (using DAR)

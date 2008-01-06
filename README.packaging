@@ -1,0 +1,12 @@
+If you retrieved this package from a version repository, you may notice that
+there's no ./configure file.  That's by design.  No sense in versioning this,
+it seems.  The following should get you on your way:
+
+  $ autoreconf --install
+  $ ./configure && make  # -- as usual
+
+If you wish to package, consider also that you can build a package straight
+from this tarball:
+
+  $ rpmbuild -ta fincore-0.XX.tar.bz2
+
