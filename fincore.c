@@ -21,6 +21,7 @@
 
 #include <stdio.h>     /* perror, fprintf, stderr, printf */
 #include <errno.h>
+#include <limits.h>
 #include <getopt.h>
 #include <fcntl.h>     /* fcntl, open */
 #include <stdlib.h>    /* exit, calloc, free */
@@ -34,19 +35,24 @@
 #define PROGRAM_NAME "fincore"
 #define AUTHORS "Martin A. Brown"
 
-#define FINC_NO_HEADER        ( 1 << 0 );
-#define FINC_SUMMARY_ONLY     ( 1 << 1 );
-#define FINC_SUMMARY          ( 1 << 2 );
-#define FINC_LIST_PAGES       ( 1 << 3 );
+#define FINC_NO_HEADER        ( 1 << 0 )
+#define FINC_SUMMARY_ONLY     ( 1 << 1 )
+#define FINC_SUMMARY          ( 1 << 2 )
+#define FINC_LIST_PAGES       ( 1 << 3 )
 
 struct a_options {
   char                   *files_from;
   int                     reporting_mode;
+  unsigned long           total_pages;
+  unsigned long           total_incore;
+  unsigned long           total_files;
 };
 
 struct a_options o = {
      .files_from      = NULL,
-     .reporting_mode  = 0
+     .reporting_mode  = 0,
+     .total_pages     = 0,
+     .total_incore    = 0
 };
 
 /* Usage Macros */
@@ -97,8 +103,8 @@ print_version(int ret)
   exit( ret );
 }
 
-static void
-parse_options( int ac, char **av )
+int
+parse_options(int ac, char **av)
 {
   extern char *optarg;
   extern int optind;
@@ -123,18 +129,18 @@ parse_options( int ac, char **av )
   {
     switch (c)
     {
-      case '?': USAGE_FATAL( "Unrecognized option:  \"%s\"\n" ); break;
-      case 'f': o.files_from      = optarg;               break;
-      case 'N': o.reporting_mode |= FINC_NO_HEADER;       break;
-      case 'S': o.reporting_mode  = FINC_SUMMARY_ONLY ;   break;
-      case 's': o.reporting_mode |= FINC_SUMMARY;         break;
-      case 'v': o.reporting_mode |= FINC_LIST_PAGES;      break;
-      case 'h': long_usage( EXIT_SUCCESS );               break;
-      case 'V': print_version( EXIT_SUCCESS );            break;
-      default: USAGE_FATAL("");  break;
+      case '?': USAGE_FATAL( "Unrecognized option:  \"%s\"\n" );     break;
+      case 'f': o.files_from      = optarg;                          break;
+      case 'S': o.reporting_mode  = (FINC_SUMMARY|FINC_NO_HEADER);   break;
+      case 'N': o.reporting_mode |= FINC_NO_HEADER;                  break;
+      case 's': o.reporting_mode |= FINC_SUMMARY;                    break;
+      case 'v': o.reporting_mode |= FINC_LIST_PAGES;                 break;
+      case 'h': long_usage( EXIT_SUCCESS );                          break;
+      case 'V': print_version( EXIT_SUCCESS );                       break;
+      default: USAGE_FATAL("");                                      break;
     }
   }
-
+  return optind;
 }
 
 /* fincore -
@@ -143,54 +149,81 @@ void
 fincore(char *filename)
 {
    int fd;
+   float percentage;
+   unsigned long inCore;
+   unsigned long pageCount;
    struct stat st;
    void *pa = (char *)0;
    unsigned char *vec = (unsigned char *)0;
    register size_t n = 0;
    size_t pageSize = getpagesize();
    register size_t pageIndex;
-   fd = open(filename, 0);
-   if (0 > fd) {
-      perror("open");
+
+   if (0 != stat(filename, &st)) {
+      fprintf(stderr, "skipping, fstat(%s): %s\n", filename, strerror(errno));
       return;
    }
 
-   if (0 != fstat(fd, &st)) {
-      perror("fstat");
-      close(fd);
+   if (!S_ISREG(st.st_mode)) {
+      fprintf(stderr, "skipping, non-regular file %s\n", filename);
+      return;
+   }
+
+   fd = open(filename, 0);
+   if (0 > fd) {
+      fprintf(stderr, "skipping, open(%s): %s\n", filename, strerror(errno));
       return;
    }
 
    pa = mmap((void *)0, st.st_size, PROT_NONE, MAP_SHARED, fd, 0);
    if (MAP_FAILED == pa) {
-      perror("mmap");
+      fprintf(stderr, "skipping, mmap(0, %lu, PROT_NONE, MAP_SHARED, %d, 0): %s\n",
+              (unsigned long)st.st_size, fd, strerror(errno));
       close(fd);
       return;
    }
 
-   /* vec = calloc(1, 1+st.st_size/pageSize); */
-   vec = calloc(1, (st.st_size+pageSize-1)/pageSize);
+   pageCount = (st.st_size+pageSize-1)/pageSize;
+   vec = calloc(1, pageCount);
    if ((void *)0 == vec) {
-      perror("calloc");
+      fprintf(stderr, "skipping, calloc(1, %lu): %s\n",
+              pageCount, strerror(errno));
       close(fd);
       return;
    }
 
    if (0 != mincore(pa, st.st_size, vec)) {
       /* perror("mincore"); */
-      fprintf(stderr, "mincore(%p, %lu, %p): %s\n",
+      fprintf(stderr, "skipping, mincore(%p, %lu, %p): %s\n",
               pa, (unsigned long)st.st_size, vec, strerror(errno));
       free(vec);
       close(fd);
       return;
    }
 
-   /* handle the results */
-   for (pageIndex = 0; pageIndex <= st.st_size/pageSize; pageIndex++) {
-      if (vec[pageIndex]&1) {
-         printf("%lu\n", (unsigned long)pageIndex);
-      }
+   /* prepare a few simple calculations */
+   inCore = 0;
+   for (pageIndex = 0; pageIndex < pageCount; pageIndex++) {
+      if (vec[pageIndex]&1) inCore++;
    }
+   o.total_files++;
+   o.total_pages += pageCount;
+   o.total_incore += inCore;
+
+   /* produce some output */
+   percentage = inCore / pageCount;
+   printf("%s %lu %lu %.2f", 
+     filename, pageCount, inCore, percentage );
+
+   if (o.reporting_mode & FINC_LIST_PAGES)
+   {
+     for (pageIndex = 0; pageIndex < pageCount; pageIndex++) {
+        if (vec[pageIndex]&1) {
+           printf(" %lu", (unsigned long)pageIndex);
+        }
+     }
+   }
+   printf("\n");
 
    free(vec);
    vec = (unsigned char *)0;
@@ -201,11 +234,30 @@ fincore(char *filename)
 }
 
 int
-main (int argc, char ** argv)
+main (int argc, char **argv)
 {
-  //int optc;
-  program_name = PROGRAM_NAME; /* argv[0]; */
-  parse_options( argc, argv );
+  int argn;
 
+  program_name = PROGRAM_NAME; /* argv[0]; */
+  argn = parse_options( argc, argv );
+
+  if (! ( o.reporting_mode & FINC_NO_HEADER ) )
+  {
+    printf("File  Size  Pages  Percent%s\n", 
+      o.reporting_mode & FINC_LIST_PAGES ? " Details" : "");
+  }
+
+  while ( argn < argc )
+  {
+    fincore(argv[argn]);
+    argn++;
+  }
+
+  if ( o.reporting_mode & FINC_SUMMARY )
+  {
+    printf("Total files: %lu\nTotal pages: %lu\nTotal in core:%lu\n", 
+      o.total_files, o.total_pages, o.total_incore);
+  }
 }
 
+/* end of file */

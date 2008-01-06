@@ -16,7 +16,7 @@ AC_PROG_INSTALL
 
 # Checks for libraries.
 AC_HEADER_STDC
-AC_CHECK_HEADERS(errno.h getopt.h fcntl.h sys/fcntl.h sys/stat.h sys/mman.h)
+AC_CHECK_HEADERS(errno.h fcntl.h getopt.h limits.h sys/fcntl.h sys/stat.h sys/mman.h)
 AC_FUNC_MMAP
 AC_FUNC_GETMNTENT
 
