@@ -36,9 +36,10 @@
 #define AUTHORS "Martin A. Brown"
 
 #define FINC_NO_HEADER        ( 1 << 0 )
-#define FINC_SUMMARY_ONLY     ( 1 << 1 )
+#define FINC_QUELL            ( 1 << 1 )
 #define FINC_SUMMARY          ( 1 << 2 )
 #define FINC_LIST_PAGES       ( 1 << 3 )
+#define FINC_SUMMARY_ONLY     ( FINC_NO_HEADER | FINC_QUELL | FINC_SUMMARY )
 
 struct a_options {
   char                   *files_from;
@@ -131,7 +132,7 @@ parse_options(int ac, char **av)
     {
       case '?': USAGE_FATAL( "Unrecognized option:  \"%s\"\n" );     break;
       case 'f': o.files_from      = optarg;                          break;
-      case 'S': o.reporting_mode  = (FINC_SUMMARY|FINC_NO_HEADER);   break;
+      case 'S': o.reporting_mode  = FINC_SUMMARY_ONLY;               break;
       case 'N': o.reporting_mode |= FINC_NO_HEADER;                  break;
       case 's': o.reporting_mode |= FINC_SUMMARY;                    break;
       case 'v': o.reporting_mode |= FINC_LIST_PAGES;                 break;
@@ -211,19 +212,22 @@ fincore(char *filename)
    o.total_incore += inCore;
 
    /* produce some output */
-   percentage = inCore / pageCount;
-   printf("%s %lu %lu %.2f", 
-     filename, pageCount, inCore, percentage );
-
-   if (o.reporting_mode & FINC_LIST_PAGES)
+   if (! ( o.reporting_mode & FINC_QUELL ) )
    {
-     for (pageIndex = 0; pageIndex < pageCount; pageIndex++) {
-        if (vec[pageIndex]&1) {
-           printf(" %lu", (unsigned long)pageIndex);
-        }
-     }
+       percentage = inCore / pageCount;
+       printf("%s %lu %lu %.2f", 
+         filename, pageCount, inCore, percentage );
+
+       if (o.reporting_mode & FINC_LIST_PAGES)
+       {
+         for (pageIndex = 0; pageIndex < pageCount; pageIndex++) {
+            if (vec[pageIndex]&1) {
+               printf(" %lu", (unsigned long)pageIndex);
+            }
+         }
+       }
+       printf("\n");
    }
-   printf("\n");
 
    free(vec);
    vec = (unsigned char *)0;
