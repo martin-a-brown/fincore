@@ -8,3 +8,34 @@ the kernel's page buffer cache.
 
 This is a fully C implementation of David Plonka's fincore work, available at
 http://net.doit.wisc.edu/~plonka/fincore/
+
+Quickstart:
+===========
+
+Let's look at a large file (i760User.pdf).  87% of this file is in the buffer
+cache.  There are a total of 67770 pages.
+
+  $ fincore i760User.pdf 
+  File  Size  Pages  Percent
+  i760User.pdf 67770 59167 0.87
+
+Let's look at netstat-trace.txt and see WHICH pages (blocks) are in the buffer
+cache.  See that the first 8 pages of the 162 block file are in core.
+
+  $ fincore -v netstat-trace.txt
+  File  Size  Pages  Percent Details
+  netstat-trace.txt 162 8 0.05 0 1 2 3 4 5 6 7
+
+Let's get a report on all .txt files in the current directory to see what
+subset of them are in core.
+
+  $ fincore -S *.txt
+  Total files: 121
+  Total pages: 2344
+  Total in core:16
+  
+Credits
+=======
+All of the idea for this project derives from David Plonka's utility.  Almost
+all of the code involved in the main loop of the program is unchanged from the
+Inline::C code used by the perl implementation.
