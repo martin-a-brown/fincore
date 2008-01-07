@@ -1,6 +1,6 @@
 
 # Process this file with autoconf to produce a configure script.
-AC_INIT(fincore, 0.10, mabrown@renesys.com)
+AC_INIT(fincore, 0.11, mabrown@renesys.com)
 AC_PREREQ(2.59)
 AC_COPYRIGHT([Copyright (c) 2008 Renesys Corporation. All Rights Reserved.])
 AC_CONFIG_SRCDIR(fincore.c)
