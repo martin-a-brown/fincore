@@ -214,7 +214,7 @@ fincore(char *filename)
    /* produce some output */
    if (! ( o.reporting_mode & FINC_QUELL ) )
    {
-       percentage = inCore / pageCount;
+       percentage = (float)inCore / (float)pageCount;
        printf("%s %lu %lu %.2f", 
          filename, pageCount, inCore, percentage );
 
