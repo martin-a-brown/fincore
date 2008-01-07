@@ -130,8 +130,7 @@ parse_options(int ac, char **av)
   {
     switch (c)
     {
-      case '?': USAGE_FATAL( "Unrecognized option: \"%s\"\n", 
-                             av[optind - 1] );                       break;
+      case '?': USAGE_FATAL( "Unrecognized option:  \"%s\"\n" );     break;
       case 'f': o.files_from      = optarg;                          break;
       case 'S': o.reporting_mode  = FINC_SUMMARY_ONLY;               break;
       case 'N': o.reporting_mode |= FINC_NO_HEADER;                  break;
@@ -139,7 +138,7 @@ parse_options(int ac, char **av)
       case 'v': o.reporting_mode |= FINC_LIST_PAGES;                 break;
       case 'h': long_usage( EXIT_SUCCESS );                          break;
       case 'V': print_version( EXIT_SUCCESS );                       break;
-      default: USAGE_FATAL("%s", "Should not have arrived here.");   break;
+      default: USAGE_FATAL("");                                      break;
     }
   }
   return optind;
@@ -157,7 +156,7 @@ fincore(char *filename)
    struct stat st;
    void *pa = (char *)0;
    unsigned char *vec = (unsigned char *)0;
-   //register size_t n = 0;
+   register size_t n = 0;
    size_t pageSize = getpagesize();
    register size_t pageIndex;
 
@@ -263,7 +262,6 @@ main (int argc, char **argv)
     printf("Total files: %lu\nTotal pages: %lu\nTotal in core:%lu\n", 
       o.total_files, o.total_pages, o.total_incore);
   }
-  exit( EXIT_SUCCESS );
 }
 
 /* end of file */
