@@ -56,5 +56,5 @@ Inline::C code used by the perl implementation.
     - primary contact for this utility
   Dave Plonka <plonka@cs.wisc.edu>
     - perl implementation, using Inline::C
-  Nathan Burnett <nburnett@vmware.com>
+  Nathan Burnett <ncb@cs.wisc.edu>
     - unreleased prior work
