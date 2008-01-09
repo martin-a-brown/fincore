@@ -36,6 +36,13 @@ subset of them are in core.
   
 Credits
 =======
-All of the idea for this project derives from David Plonka's utility.  Almost
-all of the code involved in the main loop of the program is unchanged from the
+The idea for this project derives from David Plonka's utility.  Almost all of
+the code involved in the main loop of the program is unchanged from the
 Inline::C code used by the perl implementation.
+
+  Martin A. Brown <martin@linux-ip.net>
+    - primary contact for this utility
+  Dave Plonka <plonka@cs.wisc.edu>
+    - perl implementation, using Inline::C
+  Nathan Burnett <nburnett@vmware.com>
+    - unreleased prior work

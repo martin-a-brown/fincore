@@ -1,0 +1,4 @@
+TODO
+====
+  * implement the feature --files-from
+  * conisder --null (for null terminated filenames on input)
