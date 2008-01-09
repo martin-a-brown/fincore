@@ -9,8 +9,8 @@ the kernel's page buffer cache.
 This is a fully C implementation of David Plonka's fincore work, available at
 http://net.doit.wisc.edu/~plonka/fincore/
 
-Quickstart:
-===========
+Quickstart
+==========
 
 Let's look at a large file (i760User.pdf).  87% of this file is in the buffer
 cache.  There are a total of 67770 pages.
@@ -33,7 +33,19 @@ subset of them are in core.
   Total files: 121
   Total pages: 2344
   Total in core:16
-  
+
+Building
+========
+The autotools are used for building the package.
+
+  ./configure && make
+
+If you have an RPM-based system, you should also be able to build an RPM of
+the package straight from the tarball:
+
+  rpmbuild -ta fincore-0.11.tar.gz
+
+
 Credits
 =======
 The idea for this project derives from David Plonka's utility.  Almost all of
