@@ -15,7 +15,7 @@
    along with this program; if not, write to the Free Software Foundation,
    Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.  */
 
-/* Martin A. Brown <mabrown@renesys.com> */
+/* Martin A. Brown <martin@linux-ip.net> */
 
 #include <config.h>
 
@@ -35,11 +35,10 @@
 #define PROGRAM_NAME "fincore"
 #define AUTHORS "Martin A. Brown"
 
-#define FINC_NO_HEADER        ( 1 << 0 )
-#define FINC_QUELL            ( 1 << 1 )
-#define FINC_SUMMARY          ( 1 << 2 )
-#define FINC_LIST_PAGES       ( 1 << 3 )
-#define FINC_SUMMARY_ONLY     ( FINC_NO_HEADER | FINC_QUELL | FINC_SUMMARY )
+#define FINC_QUELL            ( 1 << 0 )
+#define FINC_SUMMARY          ( 1 << 1 )
+#define FINC_LIST_PAGES       ( 1 << 2 )
+#define FINC_SUMMARY_ONLY     ( FINC_QUELL | FINC_SUMMARY )
 
 struct a_options {
   char                   *files_from;
@@ -65,9 +64,8 @@ struct a_options o = {
 /* The name this program was run with. */
 char *program_name;
 char *program_btime     = __DATE__" "__TIME__;
-char *program_copyright = "copyright Renesys"  ;
-const float program_version = 0.10f;
-
+char *program_copyright = "copyright Martin A. Brown";
+const float program_version = 0.12f;
 
 void
 short_usage(int ret)
@@ -88,7 +86,6 @@ long_usage(int ret)
     "  -V, --version             display version information and exit.\n"
     "  -v, --verbose             produce listing of blocks/pages in core\n"
     "  -f, --files-from <file>   read list of files from <file>\n"
-    "  -N, --no-header           suppress initial header line\n"
     "  -s, --summary             include a summary at the bottom\n"
     "  -S, --summary-only        produce only totals\n"
     "\n"
@@ -113,7 +110,6 @@ parse_options(int ac, char **av)
 
   static struct option const longopts[] =
   {
-    {"no-header", no_argument, NULL, 'N'},
     {"files-from", required_argument, NULL, 'f'},
     {"summary", no_argument, NULL, 's'},
     {"summary-only", no_argument, NULL, 'S'},
@@ -133,7 +129,6 @@ parse_options(int ac, char **av)
       case '?': USAGE_FATAL( "Unrecognized option:  \"%s\"\n" );     break;
       case 'f': o.files_from      = optarg;                          break;
       case 'S': o.reporting_mode  = FINC_SUMMARY_ONLY;               break;
-      case 'N': o.reporting_mode |= FINC_NO_HEADER;                  break;
       case 's': o.reporting_mode |= FINC_SUMMARY;                    break;
       case 'v': o.reporting_mode |= FINC_LIST_PAGES;                 break;
       case 'h': long_usage( EXIT_SUCCESS );                          break;
@@ -215,11 +210,12 @@ fincore(char *filename)
    if (! ( o.reporting_mode & FINC_QUELL ) )
    {
        percentage = (float)inCore / (float)pageCount;
-       printf("%s %lu %lu %.2f", 
+       printf("%s blocks %lu incore %lu percent %.2f", 
          filename, pageCount, inCore, percentage );
 
        if (o.reporting_mode & FINC_LIST_PAGES)
        {
+         printf(" pages");
          for (pageIndex = 0; pageIndex < pageCount; pageIndex++) {
             if (vec[pageIndex]&1) {
                printf(" %lu", (unsigned long)pageIndex);
@@ -245,11 +241,8 @@ main (int argc, char **argv)
   program_name = PROGRAM_NAME; /* argv[0]; */
   argn = parse_options( argc, argv );
 
-  if (! ( o.reporting_mode & FINC_NO_HEADER ) )
-  {
-    printf("File  Size  Pages  Percent%s\n", 
-      o.reporting_mode & FINC_LIST_PAGES ? " Details" : "");
-  }
+  if ( argn == argc && NULL == o.files_from )
+     USAGE_FATAL("No filename arguments specified.\n");
 
   while ( argn < argc )
   {
