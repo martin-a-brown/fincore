@@ -252,8 +252,11 @@ main (int argc, char **argv)
 
   if ( o.reporting_mode & FINC_SUMMARY )
   {
-    printf("Total files: %lu\nTotal pages: %lu\nTotal in core:%lu\n", 
-      o.total_files, o.total_pages, o.total_incore);
+    printf("Total files: %lu\nTotal pages: %lu\nTotal in core: %lu\nAverage pages in core: %lu\n", 
+      o.total_files,
+      o.total_pages,
+      o.total_incore,
+      o.total_incore/o.total_files);
   }
 }
 
