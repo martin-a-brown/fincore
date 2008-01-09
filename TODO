@@ -1,4 +1,7 @@
 TODO
 ====
   * implement the feature --files-from
-  * conisder --null (for null terminated filenames on input)
+  * consider --null (for null terminated filenames on input)
+  * add a --page-size so that the utility reports the page size
+  * examine the C99 features (e.g. struct a_options)
+  * write a manpage
